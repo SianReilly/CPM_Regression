@@ -124,11 +124,17 @@ def run_lasso(wide, target):
     mdf = mdf.dropna(axis=1, thresh=int(len(mdf)*0.6)).fillna(mdf.median())
     y, X = mdf[target], mdf[[c for c in feat if c in mdf.columns]]
     if len(X.columns)==0 or y.std()==0: return None
-    Xs = StandardScaler().fit_transform(X)
-    loo = LeaveOneOut()
-    lcv = LassoCV(cv=loo, random_state=42, max_iter=10000, n_alphas=100); lcv.fit(Xs, y)
-    mdl = Lasso(alpha=lcv.alpha_, max_iter=10000); mdl.fit(Xs, y)
-    yloo = cross_val_predict(Lasso(alpha=lcv.alpha_, max_iter=10000), Xs, y, cv=loo)
+    # Enforce float64 to avoid type errors in newer scikit-learn
+    X = X.astype(np.float64)
+    y = y.astype(np.float64)
+    try:
+        Xs = StandardScaler().fit_transform(X)
+        loo = LeaveOneOut()
+        lcv = LassoCV(cv=loo, random_state=42, max_iter=10000, n_alphas=100); lcv.fit(Xs, y)
+        mdl = Lasso(alpha=lcv.alpha_, max_iter=10000); mdl.fit(Xs, y)
+        yloo = cross_val_predict(Lasso(alpha=lcv.alpha_, max_iter=10000), Xs, y, cv=loo)
+    except Exception:
+        return None
     coefs = pd.DataFrame({"Metric": X.columns, "Short": [shorten(c) for c in X.columns],
         "Coefficient": mdl.coef_, "Abs": np.abs(mdl.coef_),
         "Pillar": [_PILLAR.get(c,"Unknown") for c in X.columns]}).sort_values("Abs", ascending=False)
@@ -139,7 +145,13 @@ def run_lasso(wide, target):
         "ntot": len(X.columns), "X": X, "y": y, "target": target}
 
 def run_all(wide):
-    return {k: run_lasso(wide, v) for k, v in TARGETS.items() if v in wide.columns and run_lasso(wide, v)}
+    out = {}
+    for k, v in TARGETS.items():
+        if v in wide.columns:
+            r = run_lasso(wide, v)
+            if r:
+                out[k] = r
+    return out
 
 # ─── PAGE ─────────────────────────────────────────────────────────────────────
 st.set_page_config(page_title="CPM Regression Analysis", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
