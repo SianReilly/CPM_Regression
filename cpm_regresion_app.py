@@ -146,10 +146,14 @@ def run_lasso(wide, target):
     mdf = wide[[target]+feat].dropna(subset=[target])
     mdf = mdf.dropna(axis=1, thresh=int(len(mdf)*0.6)).fillna(mdf.median())
     y, X = mdf[target], mdf[[c for c in feat if c in mdf.columns]]
-    if len(X.columns)==0 or y.std()==0: return None
-    # Enforce float64 to avoid type errors in newer scikit-learn
-    X = X.astype(np.float64)
-    y = y.astype(np.float64)
+    if len(X.columns)==0: return None
+    # Enforce numeric and check for zero variance
+    try:
+        X = X.astype(np.float64)
+        y = y.astype(np.float64)
+        if float(y.std()) == 0: return None
+    except (ValueError, TypeError):
+        return None
     try:
         Xs = StandardScaler().fit_transform(X)
         loo = LeaveOneOut()
