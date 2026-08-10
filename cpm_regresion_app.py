@@ -130,13 +130,12 @@ def _find_le_col(columns, sex):
     sex_l = sex.lower()
     for c in columns:
         cl = c.lower().strip()
-        if "life" in cl and "expectancy" in cl and sex_l in cl:
-            return c
-    # Fallback: just "le" or "life exp"
-    for c in columns:
-        cl = c.lower().strip()
-        if ("life exp" in cl or cl.startswith("le")) and sex_l in cl:
-            return c
+        if "life" in cl and "expectancy" in cl:
+            # "female" contains "male" so we must check carefully
+            if sex_l == "male" and "female" in cl:
+                continue  # skip female columns when looking for male
+            if sex_l in cl:
+                return c
     return None
 
 def run_lasso(wide, target):
@@ -686,8 +685,7 @@ with tabs[5]:
         les.name = "LE_Score"
         imds = imd.set_index("WD24NM")[" IMD25 IMD Score"].copy()
         imds.name = "IMD_Score"
-        sdf = pd.concat([les, imds], axis=1).dropna().reset_index()
-        sdf.columns = ["Ward", "LE_Score", "IMD_Score"]
+        sdf = pd.DataFrame({"Ward": les.index, "LE_Score": les.values, "IMD_Score": imds.reindex(les.index).values}).dropna()
         fig_sc = px.scatter(sdf, x="IMD_Score", y="LE_Score", text="Ward",
             color_discrete_sequence=[BERRY], trendline="ols")
         fig_sc.update_traces(textposition="top center", selector=dict(mode="markers+text"))
