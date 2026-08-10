@@ -682,8 +682,10 @@ with tabs[5]:
     imd_le_k = st.selectbox("LE measure", list(TARGET_DISPLAY.keys()), format_func=lambda k: TARGET_DISPLAY[k], key="imd_le")
     le_col = TARGETS[imd_le_k]
     if le_col in wides[latest].columns:
-        les = wides[latest][le_col].rename("LE_Score")
-        imds = imd.set_index("WD24NM")[" IMD25 IMD Score"].rename("IMD_Score")
+        les = wides[latest][le_col].copy()
+        les.name = "LE_Score"
+        imds = imd.set_index("WD24NM")[" IMD25 IMD Score"].copy()
+        imds.name = "IMD_Score"
         sdf = pd.concat([les, imds], axis=1).dropna()
         fig_sc = px.scatter(sdf, x="IMD_Score", y="LE_Score", text=sdf.index,
             color_discrete_sequence=[BERRY], trendline="ols")
