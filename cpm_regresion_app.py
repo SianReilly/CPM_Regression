@@ -705,8 +705,11 @@ with tabs[5]:
     dd = imd[["WD24NM"]+dc].copy()
     dd.columns = ["Ward"] + [c.replace(" IMD25 ","").replace(" Decile","") for c in dc]
     dd = dd.sort_values("IMD")
-    st.dataframe(dd.style.background_gradient(cmap="RdYlGn_r", subset=dd.columns[1:]),
-        use_container_width=True, hide_index=True)
+    try:
+        st.dataframe(dd.style.background_gradient(cmap="RdYlGn_r", subset=dd.columns[1:]),
+            use_container_width=True, hide_index=True)
+    except Exception:
+        st.dataframe(dd, use_container_width=True, hide_index=True)
     st.caption("Decile 1 (red) = most deprived 10% nationally. Decile 10 (green) = least deprived.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
