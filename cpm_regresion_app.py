@@ -670,7 +670,9 @@ with tabs[5]:
                 "Darker red bars = more deprived wards. If deprived wards are declining while affluent ones improve, "
                 "the inequality gap is widening.")
 
-            fig_sc2 = px.scatter(lchg.reset_index(), x="IMD", y="LE_Change", text="index",
+            lchg_plot = lchg.reset_index()
+            ward_col = lchg_plot.columns[0]  # whatever the index was named
+            fig_sc2 = px.scatter(lchg_plot, x="IMD", y="LE_Change", text=ward_col,
                 color_discrete_sequence=[BERRY], trendline="ols")
             fig_sc2.update_traces(textposition="top center", selector=dict(mode="markers+text"))
             fig_sc2.add_hline(y=0, line_dash="dash", line_color="#ccc")
