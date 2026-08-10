@@ -686,8 +686,9 @@ with tabs[5]:
         les.name = "LE_Score"
         imds = imd.set_index("WD24NM")[" IMD25 IMD Score"].copy()
         imds.name = "IMD_Score"
-        sdf = pd.concat([les, imds], axis=1).dropna()
-        fig_sc = px.scatter(sdf, x="IMD_Score", y="LE_Score", text=sdf.index,
+        sdf = pd.concat([les, imds], axis=1).dropna().reset_index()
+        sdf.columns = ["Ward", "LE_Score", "IMD_Score"]
+        fig_sc = px.scatter(sdf, x="IMD_Score", y="LE_Score", text="Ward",
             color_discrete_sequence=[BERRY], trendline="ols")
         fig_sc.update_traces(textposition="top center", selector=dict(mode="markers+text"))
         fig_sc.update_layout(title=f"IMD deprivation vs {TARGET_DISPLAY[imd_le_k]} LE ({latest})",
