@@ -113,8 +113,31 @@ def make_wide(df, no_outliers=True):
     if no_outliers: df = df[~df["Outlier_Version"]]
     w = df.pivot_table(index="Ward", columns="Metric", values="Score", aggfunc="first")
     if "Westminster" in w.index: w = w.drop("Westminster")
+    # Flexibly find LE columns by searching for partial matches
+    le_male_col = _find_le_col(w.columns, "male")
+    le_female_col = _find_le_col(w.columns, "female")
+    # Rename to standard names so the rest of the app works
+    rename_map = {}
+    if le_male_col and le_male_col != LE_M: rename_map[le_male_col] = LE_M
+    if le_female_col and le_female_col != LE_F: rename_map[le_female_col] = LE_F
+    if rename_map: w = w.rename(columns=rename_map)
+    # Create overall as average of male + female
     if LE_M in w.columns and LE_F in w.columns: w[LE_O] = w[[LE_M, LE_F]].mean(axis=1)
     return w
+
+def _find_le_col(columns, sex):
+    """Flexibly find life expectancy column by partial match."""
+    sex_l = sex.lower()
+    for c in columns:
+        cl = c.lower().strip()
+        if "life" in cl and "expectancy" in cl and sex_l in cl:
+            return c
+    # Fallback: just "le" or "life exp"
+    for c in columns:
+        cl = c.lower().strip()
+        if ("life exp" in cl or cl.startswith("le")) and sex_l in cl:
+            return c
+    return None
 
 def run_lasso(wide, target):
     le = [c for c in wide.columns if "life expectancy" in c.lower()]
@@ -186,6 +209,25 @@ yrs = sorted(yd.keys()); latest = yrs[-1]
 wides, results = {}, {}
 for lb in yrs:
     w = make_wide(yd[lb], no_outliers); wides[lb] = w; results[lb] = run_all(w)
+
+# Diagnostic: show what was found in sidebar
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("**🔍 Data diagnostic**")
+    for lb in yrs:
+        w = wides[lb]
+        le_found = [c for c in w.columns if "life expectancy" in c.lower()]
+        n_results = len(results.get(lb, {}))
+        st.caption(f"{lb}: {len(w)} wards, {len(w.columns)} cols, LE cols: {le_found}, models: {n_results}")
+    if not any(results.values()):
+        all_metrics = []
+        for lb, df in yd.items():
+            all_metrics.extend(df["Metric"].unique().tolist())
+        le_like = [m for m in set(all_metrics) if "life" in m.lower() or "le " in m.lower() or m.lower().startswith("le")]
+        if le_like:
+            st.warning(f"Found LE-like metrics in raw data: {le_like}")
+        else:
+            st.warning(f"No LE metrics found. Sample metrics: {list(set(all_metrics))[:5]}")
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 st.title("Common Progress Measures — Regression Analysis")
