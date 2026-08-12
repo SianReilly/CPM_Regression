@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Common Progress Measures — Regression Analysis Dashboard
+# Common Progress Measures - Regression Analysis Dashboard
 # Strategy & Intelligence, Westminster City Council
 #
 # pip install streamlit plotly pandas scikit-learn openpyxl python-pptx kaleido
@@ -188,7 +188,7 @@ st.set_page_config(page_title="CPM Regression Analysis", page_icon="📊", layou
 with st.sidebar:
     st.header("⚙️ Settings")
     no_outliers = not st.checkbox("Use outlier-removed versions", value=False,
-        help="Default OFF — keeps all 18 wards. Turning this on uses cleaner data but may drop some wards.")
+        help="Default OFF - keeps all 18 wards. Turning this on uses cleaner data but may drop some wards.")
     st.markdown("---")
 
 # Load data from repo (file sits alongside the script)
@@ -205,7 +205,7 @@ for f in ["normalised_outputs.xlsx", "Dummy_Datasets.xlsx", "Core_Datasets.xlsx"
         break
 
 if fp is None:
-    st.title("Common Progress Measures — Regression Analysis")
+    st.title("Common Progress Measures - Regression Analysis")
     st.error("normalised_outputs.xlsx not found. Make sure it's in the same folder as the app.")
     st.stop()
 
@@ -247,7 +247,7 @@ with st.sidebar:
             st.warning(f"No LE metrics found. Sample metrics: {list(set(all_metrics))[:5]}")
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
-st.title("Common Progress Measures — Regression Analysis")
+st.title("Common Progress Measures - Regression Analysis")
 st.markdown("*Built by Strategy & Intelligence, Westminster City Council*")
 st.caption("This dashboard tests how well our CPM indicators explain life expectancy across Westminster's 18 wards, "
            "identifies which indicators matter most, and flags wards where outcomes are unexpectedly good or bad.")
@@ -256,10 +256,10 @@ tabs = st.tabs(["🏠 How to Read This", "🔬 Data Overview (EDA)", "📊 What 
     "🔍 Unexpected Wards", "📅 Year-on-Year", "🗺️ Deprivation & LE", "📈 Explore the Data"])
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 0 — HOW TO READ THIS
+# TAB 0 - HOW TO READ THIS
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[0]:
-    st.header("What this dashboard does — and how to read it")
+    st.header("What this dashboard does - and how to read it")
     st.markdown("""
     This tool applies two analytical techniques to the Common Progress Measures to answer
     questions that the existing ward scoring can't:
@@ -268,7 +268,7 @@ with tabs[0]:
 
     Imagine you have 29 CPM indicators and you want to know which ones actually matter for
     life expectancy. You could look at each one individually, but the problem is that many
-    indicators move together — wards with high poverty tend to also have high worklessness,
+    indicators move together - wards with high poverty tend to also have high worklessness,
     poor housing, and worse health outcomes. So which indicator is actually doing the explaining,
     and which ones are just along for the ride?
 
@@ -276,7 +276,7 @@ with tabs[0]:
     1. Looks at all 29 indicators at once
     2. Works out which combination best predicts life expectancy
     3. **Automatically drops** indicators that don't add anything beyond what the others already capture
-    4. Gives each remaining indicator a **coefficient** — a number showing how strongly it relates to LE
+    4. Gives each remaining indicator a **coefficient** - a number showing how strongly it relates to LE
 
     The key advantage over looking at simple correlations is that LASSO handles **overlapping
     indicators** (the technical term is multicollinearity). If child poverty and workless households
@@ -289,7 +289,7 @@ with tabs[0]:
 
     The current CPM scoring tells you "Church Street scores low on anxiety." But it doesn't tell
     you whether that's *surprising*. A ward that's deprived across the board will naturally score
-    low on lots of things — that's expected, not news.
+    low on lots of things - that's expected, not news.
 
     **Residual analysis** asks a different question: given everything else we know about a ward,
     is this particular score better or worse than we'd *expect*?
@@ -297,8 +297,8 @@ with tabs[0]:
     The **residual** is simply: **Actual value minus Predicted value**.
 
     - A **large negative residual** means life expectancy is worse than the ward's overall CPM
-      profile would suggest — something specific may need attention
-    - A **large positive residual** means LE is better than expected — something is going right
+      profile would suggest - something specific may need attention
+    - A **large positive residual** means LE is better than expected - something is going right
 
     This shifts the conversation from "which wards are worst" (which we already know) to
     "where are the specific, unexpected gaps that targeted action could address."
@@ -306,7 +306,7 @@ with tabs[0]:
     ### What is "Overall LE"?
 
     The dashboard runs the analysis for **male LE, female LE, and overall LE** (which is the
-    average of the male and female normalised scores). This isn't a separate data source — it's
+    average of the male and female normalised scores). This isn't a separate data source - it's
     a combined view that smooths out sex-specific patterns.
 
     ### What does R² mean?
@@ -317,7 +317,7 @@ with tabs[0]:
     - **R² = 0.75** → the indicators explain 75% of why LE differs across wards. Strong.
     - **R² = 0.30** → they only explain 30%. We're missing something.
 
-    The R² shown here uses **Leave-One-Out cross-validation** — each ward is left out in turn
+    The R² shown here uses **Leave-One-Out cross-validation** - each ward is left out in turn
     and predicted from the remaining 17. This gives an honest estimate rather than an
     overly optimistic one.
 
@@ -327,7 +327,7 @@ with tabs[0]:
       Adding or removing a single ward can change results.
     - **Life expectancy is lagging.** It's measured over 5-year periods, so it may not reflect
       recent changes in CPM indicators.
-    - **Air quality has reverse polarity** — pollution is worst in the wealthiest
+    - **Air quality has reverse polarity** - pollution is worst in the wealthiest
       areas (West End, Marylebone). The normalisation handles the scoring direction, but the
       underlying confound remains.
     - **Correlation isn't causation.** These indicators *co-occur* with LE differences; they don't
@@ -337,22 +337,22 @@ with tabs[0]:
 
     This is a common question, so it's worth explaining clearly.
 
-    **Step 1 — Min-max normalisation (already done in the CPM data):**
+    **Step 1 - Min-max normalisation (already done in the CPM data):**
     This puts every indicator on a 0-to-1 scale and, crucially, flips "negative" indicators
     (like crime or poverty) so that a higher score always means "better." Without this, the
     model would think more crime = better outcomes because the most affluent wards happen to
     be in high-crime areas like the West End.
 
-    **Step 2 — Z-scoring (done by the LASSO model):**
+    **Step 2 - Z-scoring (done by the LASSO model):**
     Even after min-max normalisation, different indicators have different *spreads* across wards.
     One indicator might have all 18 wards clustered between 0.4 and 0.6, while another might
-    stretch from 0.0 to 1.0. LASSO uses a penalty to decide which indicators to keep — but if
+    stretch from 0.0 to 1.0. LASSO uses a penalty to decide which indicators to keep - but if
     one indicator has more spread than another, the penalty hits them unequally, regardless of
     which is actually more predictive. Z-scoring (subtracting the mean and dividing by the
     standard deviation) fixes this by giving every indicator a mean of 0 and a spread of 1, so
     LASSO's penalty treats them all fairly.
 
-    **Does this distort anything?** No. Both are linear transformations — stretching and shifting
+    **Does this distort anything?** No. Both are linear transformations - stretching and shifting
     the numbers without changing the relationships between them. The model's outputs (which
     indicators matter, which wards are unexpected) would be identical whether you started from
     raw values or min-max scores. The z-scoring just ensures LASSO makes fair comparisons.
@@ -361,10 +361,10 @@ with tabs[0]:
     st.info("💡 Every chart has a **⬇ Download as slide** button so you can drop it straight into a deck.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 1 — EXPLORATORY DATA ANALYSIS
+# TAB 1 - EXPLORATORY DATA ANALYSIS
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[1]:
-    st.header(f"Data Overview — Exploratory Data Analysis ({latest})")
+    st.header(f"Data Overview - Exploratory Data Analysis ({latest})")
     st.markdown("""
     Before running any models, it's important to understand what we're working with.
     This section profiles the dataset following the standard EDA pipeline:
@@ -401,7 +401,7 @@ with tabs[1]:
     missing_any = missing_df[missing_df["Missing count"] > 0]
 
     if len(missing_any) == 0:
-        st.success("No missing values across any indicator — the dataset is complete.")
+        st.success("No missing values across any indicator - the dataset is complete.")
     else:
         st.warning(f"{len(missing_any)} indicator(s) have missing data:")
         st.dataframe(missing_any.sort_values("Missing %", ascending=False), use_container_width=True, hide_index=True)
@@ -428,7 +428,7 @@ with tabs[1]:
     # ── Correlation with LE ──
     st.subheader("4. Initial correlations with life expectancy")
     st.markdown("Before running the regression, a simple correlation check shows which indicators "
-                "have the strongest *individual* relationship with LE. But remember — individual "
+                "have the strongest *individual* relationship with LE. But remember - individual "
                 "correlations can be misleading when indicators overlap. That's why we use LASSO.")
 
     eda_target = st.selectbox("Show correlations for", list(TARGET_DISPLAY.keys()),
@@ -444,13 +444,13 @@ with tabs[1]:
             xaxis_title="Pearson correlation (−1 to +1)", height=max(500, len(corr_df)*20+100))
         chart(fig_corr, f"eda_corr_{eda_target}",
             "Positive = higher score → higher LE. Negative = higher score → lower LE. "
-            "But these don't account for overlap between indicators — LASSO does.")
+            "But these don't account for overlap between indicators - LASSO does.")
 
     # ── Pillar correlation heatmap ──
     st.subheader("5. Do the CPM pillars overlap?")
     st.markdown("If two pillars are highly correlated, their indicators are largely measuring the same "
                 "thing. LASSO handles this automatically, so you don't need to manually group or remove "
-                "indicators — but it's useful to see where the redundancy sits.")
+                "indicators - but it's useful to see where the redundancy sits.")
 
     pillar_avgs = pd.DataFrame()
     for p in sorted(set(_PILLAR.values())):
@@ -461,11 +461,11 @@ with tabs[1]:
             color_continuous_scale=["white", DUSTY, BERRY], zmin=-1, zmax=1, aspect="auto")
         fig_heat.update_layout(title="Correlation between CPM pillars (ward-level averages)", height=450)
         chart(fig_heat, "eda_pillar_heat",
-            "Values close to 1.0 mean two pillars move together — their indicators overlap. "
+            "Values close to 1.0 mean two pillars move together - their indicators overlap. "
             "LASSO deals with this by keeping one representative and dropping the rest.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 2 — WHAT EXPLAINS LE (LASSO)
+# TAB 2 - WHAT EXPLAINS LE (LASSO)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[2]:
     st.header(f"What explains life expectancy across Westminster's wards? ({latest})")
@@ -500,7 +500,7 @@ with tabs[2]:
         The CPM indicators explain **{best[1]:.0%}** of the variation in **{best[0]}** life expectancy
         across wards (using {best[2]} selected indicators), but only **{worst[1]:.0%}** for **{worst[0]}**.
         This means the factors driving {best[0].lower()} LE are better captured by the current CPM
-        dataset than those driving {worst[0].lower()} LE — suggesting there may be additional indicators
+        dataset than those driving {worst[0].lower()} LE - suggesting there may be additional indicators
         worth collecting to improve the weaker model.
         """)
 
@@ -517,14 +517,14 @@ with tabs[2]:
 
         if len(sel) > 0:
             st.subheader(f"Indicators selected by LASSO for {TARGET_DISPLAY[detail_k]} LE ({latest})")
-            st.markdown("Each bar shows the **coefficient** — how strongly that indicator relates to LE "
+            st.markdown("Each bar shows the **coefficient** - how strongly that indicator relates to LE "
                         "after accounting for everything else. Longer bar = stronger relationship.")
             fig = go.Figure()
             for _, row in sel.iterrows():
                 fig.add_trace(go.Bar(y=[row["Short"]], x=[row["Coefficient"]], orientation="h",
                     marker_color=PILLAR_COLOURS.get(row["Pillar"], MUTED), showlegend=False,
                     hovertemplate=f"<b>{row['Short']}</b><br>Pillar: {row['Pillar']}<br>Coefficient: {row['Coefficient']:.3f}<extra></extra>"))
-            fig.update_layout(title=f"LASSO kept {len(sel)} indicators — these are the ones that matter",
+            fig.update_layout(title=f"LASSO kept {len(sel)} indicators - these are the ones that matter",
                 xaxis_title="Coefficient (positive = associated with higher LE)", height=max(350, len(sel)*40+100))
             chart(fig, f"lasso_{detail_k}",
                 "Positive bars: wards scoring higher on this indicator tend to have higher LE. "
@@ -541,7 +541,7 @@ with tabs[2]:
                 strength = "strongly" if abs(row["Coefficient"]) > 0.1 else "moderately"
                 inferences.append(
                     f"- **{row['Short']}** is {strength} associated with **{assoc}** "
-                    f"{TARGET_DISPLAY[detail_k]} LE — wards with {direction} scores on this indicator "
+                    f"{TARGET_DISPLAY[detail_k]} LE - wards with {direction} scores on this indicator "
                     f"tend to have {assoc} life expectancy, even after accounting for all other CPM indicators."
                 )
             st.markdown("\n".join(inferences))
@@ -549,9 +549,9 @@ with tabs[2]:
             st.warning("LASSO couldn't find reliable predictors at this sample size.")
 
         with st.expander(f"📋 {len(dropped)} indicators LASSO dropped (click to see)"):
-            st.markdown("These were **zeroed out** — they don't add explanatory value beyond "
+            st.markdown("These were **zeroed out** - they don't add explanatory value beyond "
                         "what the selected indicators already capture. This doesn't mean they're "
-                        "unimportant — just that other indicators already cover the same ground.")
+                        "unimportant - just that other indicators already cover the same ground.")
             st.dataframe(dropped[["Short", "Pillar"]].rename(columns={"Short": "Indicator"}),
                 use_container_width=True, hide_index=True)
 
@@ -564,7 +564,7 @@ with tabs[2]:
         mn, mx = min(pdf["Actual"].min(), pdf["Predicted"].min())-0.05, max(pdf["Actual"].max(), pdf["Predicted"].max())+0.05
         fig2.add_trace(go.Scatter(x=[mn,mx], y=[mn,mx], mode="lines", line=dict(dash="dash", color="#ccc"), name="Perfect prediction"))
         fig2.update_traces(textposition="top center", selector=dict(mode="markers+text"))
-        fig2.update_layout(title=f"Actual vs Predicted — {TARGET_DISPLAY[detail_k]} LE",
+        fig2.update_layout(title=f"Actual vs Predicted - {TARGET_DISPLAY[detail_k]} LE",
             xaxis_title="What the model predicts", yaxis_title="What actually happened")
         chart(fig2, f"avp_{detail_k}")
 
@@ -595,7 +595,7 @@ with tabs[2]:
         chart(fig_c, "cross_target")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — RESIDUAL ANALYSIS
+# TAB 3 - RESIDUAL ANALYSIS
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[3]:
     st.header("Which wards have unexpectedly high or low life expectancy?")
@@ -630,12 +630,12 @@ with tabs[3]:
         if len(worst_wards) > 0:
             worst_names = ", ".join(worst_wards["Ward"].head(3).tolist())
             st.markdown(f"- **Wards with lower LE than expected:** {worst_names}. "
-                f"These wards' life expectancy is worse than their CPM scores would predict — "
+                f"These wards' life expectancy is worse than their CPM scores would predict - "
                 f"something beyond the measured indicators may be driving poorer outcomes here.")
         if len(best_wards) > 0:
             best_names = ", ".join(best_wards["Ward"].head(3).tolist())
             st.markdown(f"- **Wards with higher LE than expected:** {best_names}. "
-                f"These wards are outperforming their CPM profile — there may be protective factors "
+                f"These wards are outperforming their CPM profile - there may be protective factors "
                 f"not captured in the current indicator set.")
 
         detail = pdf.copy().round(3)
@@ -667,11 +667,11 @@ with tabs[3]:
         st.warning("No results for this combination.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — YEAR-ON-YEAR
+# TAB 4 - YEAR-ON-YEAR
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[4]:
     st.header("Year-on-Year: 2023-24 vs 2024-25")
-    st.markdown("Running the same model on two years of data lets us check **stability** — "
+    st.markdown("Running the same model on two years of data lets us check **stability** - "
                 "indicators that appear in both years are more trustworthy than those that flip.")
 
     if len(yrs) < 2:
@@ -739,7 +739,7 @@ with tabs[4]:
         st.warning("Results not available for both years.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 5 — DEPRIVATION & LE
+# TAB 5 - DEPRIVATION & LE
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[5]:
     st.header("Deprivation and Life Expectancy")
@@ -758,7 +758,7 @@ with tabs[5]:
 
     # IMD vs LE scatter
     st.subheader("Does higher deprivation mean lower life expectancy?")
-    st.markdown("We'd expect a negative relationship — more deprived wards should have lower LE. "
+    st.markdown("We'd expect a negative relationship - more deprived wards should have lower LE. "
                 "Wards far from the trendline are the 'unexpected' ones.")
     imd_le_k = st.selectbox("LE measure", list(TARGET_DISPLAY.keys()), format_func=lambda k: TARGET_DISPLAY[k], key="imd_le")
     le_col = TARGETS[imd_le_k]
@@ -842,7 +842,7 @@ with tabs[5]:
     st.caption("Decile 1 (red) = most deprived 10% nationally. Decile 10 (green) = least deprived.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 6 — EXPLORE
+# TAB 6 - EXPLORE
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[6]:
     st.header("Explore the Data")
