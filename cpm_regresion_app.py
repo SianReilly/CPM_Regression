@@ -57,8 +57,8 @@ def pptx_btn(fig, cid):
 
 def style(fig):
     fig.update_layout(font_family="Arial", title_font_size=16, title_font_color="#333",
-        plot_bgcolor="white", paper_bgcolor="white", margin=dict(l=40, r=20, t=60, b=40),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02))
+        plot_bgcolor="white", paper_bgcolor="white", margin=dict(l=40, r=20, t=100, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="left", x=0))
     fig.update_xaxes(showgrid=False, linecolor="#ccc")
     fig.update_yaxes(gridcolor="#eee", linecolor="white")
     return fig
@@ -333,6 +333,30 @@ with tabs[0]:
       underlying confound remains.
     - **Correlation isn't causation.** These indicators *co-occur* with LE differences; they don't
       necessarily *cause* them.
+
+    ### Why are the scores standardised twice?
+
+    This is a common question, so it's worth explaining clearly.
+
+    **Step 1 — Min-max normalisation (already done in the CPM data):**
+    This puts every indicator on a 0-to-1 scale and, crucially, flips "negative" indicators
+    (like crime or poverty) so that a higher score always means "better." Without this, the
+    model would think more crime = better outcomes because the most affluent wards happen to
+    be in high-crime areas like the West End.
+
+    **Step 2 — Z-scoring (done by the LASSO model):**
+    Even after min-max normalisation, different indicators have different *spreads* across wards.
+    One indicator might have all 18 wards clustered between 0.4 and 0.6, while another might
+    stretch from 0.0 to 1.0. LASSO uses a penalty to decide which indicators to keep — but if
+    one indicator has more spread than another, the penalty hits them unequally, regardless of
+    which is actually more predictive. Z-scoring (subtracting the mean and dividing by the
+    standard deviation) fixes this by giving every indicator a mean of 0 and a spread of 1, so
+    LASSO's penalty treats them all fairly.
+
+    **Does this distort anything?** No. Both are linear transformations — stretching and shifting
+    the numbers without changing the relationships between them. The model's outputs (which
+    indicators matter, which wards are unexpected) would be identical whether you started from
+    raw values or min-max scores. The z-scoring just ensures LASSO makes fair comparisons.
     """)
 
     st.info("💡 Every chart has a **⬇ Download as slide** button so you can drop it straight into a deck.")
@@ -466,6 +490,21 @@ with tabs[2]:
             else:
                 st.subheader(disp); st.warning("No data")
 
+    # Dynamic summary interpretation
+    r_vals = {k: results[latest].get(k) for k, disp in TARGET_DISPLAY.items() if results[latest].get(k)}
+    if len(r_vals) > 1:
+        r2_items = [(TARGET_DISPLAY[k], rv["r2"], rv["nsel"]) for k, rv in r_vals.items()]
+        best = max(r2_items, key=lambda x: x[1])
+        worst = min(r2_items, key=lambda x: x[1])
+        st.markdown("#### 📝 What does this tell us?")
+        st.markdown(f"""
+        The CPM indicators explain **{best[1]:.0%}** of the variation in **{best[0]}** life expectancy
+        across wards (using {best[2]} selected indicators), but only **{worst[1]:.0%}** for **{worst[0]}**.
+        This means the factors driving {best[0].lower()} LE are better captured by the current CPM
+        dataset than those driving {worst[0].lower()} LE — suggesting there may be additional indicators
+        worth collecting to improve the weaker model.
+        """)
+
     st.markdown("---")
 
     # Detailed view
@@ -493,6 +532,20 @@ with tabs[2]:
                 "Negative bars: the opposite. Coloured by CPM pillar.")
             legend = " · ".join([f'<span style="color:{PILLAR_COLOURS.get(p, MUTED)}">■</span> {p}' for p in sel["Pillar"].unique()])
             st.markdown(f"**Pillar key:** {legend}", unsafe_allow_html=True)
+
+            # Dynamic inference for each selected indicator
+            st.markdown("#### 📝 In plain English:")
+            inferences = []
+            for _, row in sel.sort_values("Abs", ascending=False).iterrows():
+                direction = "higher" if row["Coefficient"] > 0 else "lower"
+                assoc = "higher" if row["Coefficient"] > 0 else "lower"
+                strength = "strongly" if abs(row["Coefficient"]) > 0.1 else "moderately"
+                inferences.append(
+                    f"- **{row['Short']}** is {strength} associated with **{assoc}** "
+                    f"{TARGET_DISPLAY[detail_k]} LE — wards with {direction} scores on this indicator "
+                    f"tend to have {assoc} life expectancy, even after accounting for all other CPM indicators."
+                )
+            st.markdown("\n".join(inferences))
         else:
             st.warning("LASSO couldn't find reliable predictors at this sample size.")
 
@@ -570,6 +623,21 @@ with tabs[3]:
         fig3.update_layout(title=f"Where does {TARGET_DISPLAY[res_k]} LE diverge from expectations? ({res_yr})",
             xaxis_title="Residual (actual minus predicted)", height=max(450, len(pdf)*30+80))
         chart(fig3, f"resid_{res_k}_{res_yr}")
+
+        # Dynamic residual interpretation
+        worst_wards = pdf[pdf["Residual"] < -0.05].sort_values("Residual")
+        best_wards = pdf[pdf["Residual"] > 0.05].sort_values("Residual", ascending=False)
+        st.markdown("#### 📝 Key findings:")
+        if len(worst_wards) > 0:
+            worst_names = ", ".join(worst_wards["Ward"].head(3).tolist())
+            st.markdown(f"- **Wards with lower LE than expected:** {worst_names}. "
+                f"These wards' life expectancy is worse than their CPM scores would predict — "
+                f"something beyond the measured indicators may be driving poorer outcomes here.")
+        if len(best_wards) > 0:
+            best_names = ", ".join(best_wards["Ward"].head(3).tolist())
+            st.markdown(f"- **Wards with higher LE than expected:** {best_names}. "
+                f"These wards are outperforming their CPM profile — there may be protective factors "
+                f"not captured in the current indicator set.")
 
         detail = pdf.copy().round(3)
         detail["Interpretation"] = detail["Residual"].apply(
