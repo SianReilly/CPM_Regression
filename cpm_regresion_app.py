@@ -328,7 +328,7 @@ with tabs[0]:
       Adding or removing a single ward can change results.
     - **Life expectancy is lagging.** It's measured over 5-year periods, so it may not reflect
       recent changes in CPM indicators.
-    - **Air quality has reverse polarity** (Damian's point) — pollution is worst in the wealthiest
+    - **Air quality has reverse polarity** — pollution is worst in the wealthiest
       areas (West End, Marylebone). The normalisation handles the scoring direction, but the
       underlying confound remains.
     - **Correlation isn't causation.** These indicators *co-occur* with LE differences; they don't
