@@ -120,5 +120,3 @@ IMD × Male LE correlation: **−0.74** (strong negative — more deprived wards
 Every chart has a **⬇ Download as slide** button that exports it as a single-slide PPTX — ready to paste into a presentation.
 
 ---
-
-*Questions or feedback: Sian Reilly (sreilly1@westminster.gov.uk)*
