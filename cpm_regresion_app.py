@@ -1,5 +1,4 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Common Progress Measures — Regression Analysis Dashboard
 # Strategy & Intelligence, Westminster City Council
 #
 # pip install streamlit plotly pandas scikit-learn openpyxl python-pptx kaleido
@@ -57,8 +56,8 @@ def pptx_btn(fig, cid):
 
 def style(fig):
     fig.update_layout(font_family="Arial", title_font_size=16, title_font_color="#333",
-        plot_bgcolor="white", paper_bgcolor="white", margin=dict(l=40, r=20, t=100, b=40),
-        legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="left", x=0))
+        plot_bgcolor="white", paper_bgcolor="white", margin=dict(l=40, r=20, t=140, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.12, xanchor="left", x=0))
     fig.update_xaxes(showgrid=False, linecolor="#ccc")
     fig.update_yaxes(gridcolor="#eee", linecolor="white")
     return fig
@@ -365,7 +364,7 @@ with tabs[0]:
 # TAB 1 — EXPLORATORY DATA ANALYSIS
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[1]:
-    st.header("Data Overview — Exploratory Data Analysis")
+    st.header(f"Data Overview — Exploratory Data Analysis ({latest})")
     st.markdown("""
     Before running any models, it's important to understand what we're working with.
     This section profiles the dataset following the standard EDA pipeline:
@@ -469,8 +468,8 @@ with tabs[1]:
 # TAB 2 — WHAT EXPLAINS LE (LASSO)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[2]:
-    st.header("What explains life expectancy across Westminster's wards?")
-    st.markdown("The LASSO regression runs for **all three** measures simultaneously: male, female, "
+    st.header(f"What explains life expectancy across Westminster's wards? ({latest})")
+    st.markdown(f"Using **{latest}** CPM data. The LASSO regression runs for **all three** measures simultaneously: male, female, "
                 "and overall (average of both). This lets us see which indicators consistently matter "
                 "and which are specific to one sex.")
 
@@ -571,7 +570,7 @@ with tabs[2]:
 
     # Cross-target comparison
     st.markdown("---")
-    st.subheader("Which indicators appear across male, female, and overall?")
+    st.subheader(f"Which indicators appear across male, female, and overall? ({latest})")
     st.markdown("Indicators selected for **all three** are the strongest signals. "
                 "Those appearing in only one may be noise.")
     cross = []
@@ -788,14 +787,15 @@ with tabs[5]:
             lchg = pd.DataFrame({y1: wides[y1][lc], y2: wides[y2][lc]}).dropna()
             lchg["LE_Change"] = lchg[y2] - lchg[y1]
             lchg["IMD"] = lchg.index.map(imd.set_index("WD24NM")[" IMD25 IMD Score"])
-            lchg = lchg.dropna(subset=["IMD"]).sort_values("IMD", ascending=False)
+            lchg = lchg.dropna(subset=["IMD"]).sort_values("IMD", ascending=True)
 
             fig_chg = go.Figure(go.Bar(y=lchg.index, x=lchg["LE_Change"], orientation="h",
                 marker=dict(color=lchg["IMD"], colorscale=[[0,GREEN],[1,BERRY]],
                     colorbar=dict(title="IMD")),
                 hovertemplate="<b>%{y}</b><br>LE Change: %{x:.3f}<br>IMD: %{marker.color:.1f}<extra></extra>"))
             fig_chg.update_layout(title=f"LE change ({y1} → {y2}), sorted by deprivation (most deprived at top)",
-                xaxis_title="Change in normalised LE score", height=max(450, len(lchg)*30+80))
+                xaxis_title="Change in normalised LE score", height=max(450, len(lchg)*30+80),
+                yaxis=dict(autorange="reversed"))
             chart(fig_chg, f"le_chg_imd_{chg_k}",
                 "Darker red bars = more deprived wards. If deprived wards are declining while affluent ones improve, "
                 "the inequality gap is widening.")
