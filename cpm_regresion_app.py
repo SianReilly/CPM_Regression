@@ -1,6 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Common Progress Measures — Regression Analysis Dashboard
-# Built by Sian Reilly, Data & Intelligence Analyst
 # Strategy & Intelligence, Westminster City Council
 #
 # pip install streamlit plotly pandas scikit-learn openpyxl python-pptx kaleido
@@ -141,26 +140,28 @@ def _find_le_col(columns, sex):
 def run_lasso(wide, target):
     le = [c for c in wide.columns if "life expectancy" in c.lower()]
     feat = [c for c in wide.columns if c not in le]
-    if target not in wide.columns: return None
+    if target not in wide.columns: return {"_fail": f"'{target}' not in columns"}
     mdf = wide[[target]+feat].dropna(subset=[target])
+    if len(mdf) < 3: return {"_fail": f"Only {len(mdf)} wards have data for {target}"}
     mdf = mdf.dropna(axis=1, thresh=int(len(mdf)*0.6)).fillna(mdf.median())
     y, X = mdf[target], mdf[[c for c in feat if c in mdf.columns]]
-    if len(X.columns)==0: return None
+    if len(X.columns)==0: return {"_fail": "No feature columns survived cleaning"}
     # Enforce numeric and check for zero variance
     try:
         X = X.astype(np.float64)
         y = y.astype(np.float64)
-        if float(y.std()) == 0: return None
-    except (ValueError, TypeError):
-        return None
+        y_std = float(y.std())
+        if y_std == 0: return {"_fail": f"Target has zero variance (all values = {y.iloc[0]:.3f})"}
+    except (ValueError, TypeError) as e:
+        return {"_fail": f"Type conversion error: {e}"}
     try:
         Xs = StandardScaler().fit_transform(X)
         loo = LeaveOneOut()
-        lcv = LassoCV(cv=loo, random_state=42, max_iter=10000, n_alphas=100); lcv.fit(Xs, y)
+        lcv = LassoCV(cv=loo, random_state=42, max_iter=10000); lcv.fit(Xs, y)
         mdl = Lasso(alpha=lcv.alpha_, max_iter=10000); mdl.fit(Xs, y)
         yloo = cross_val_predict(Lasso(alpha=lcv.alpha_, max_iter=10000), Xs, y, cv=loo)
-    except Exception:
-        return None
+    except Exception as e:
+        return {"_fail": f"LASSO fitting error: {e}"}
     coefs = pd.DataFrame({"Metric": X.columns, "Short": [shorten(c) for c in X.columns],
         "Coefficient": mdl.coef_, "Abs": np.abs(mdl.coef_),
         "Pillar": [_PILLAR.get(c,"Unknown") for c in X.columns]}).sort_values("Abs", ascending=False)
@@ -175,8 +176,10 @@ def run_all(wide):
     for k, v in TARGETS.items():
         if v in wide.columns:
             r = run_lasso(wide, v)
-            if r:
+            if r and "_fail" not in r:
                 out[k] = r
+            elif r and "_fail" in r:
+                out[f"_fail_{k}"] = r["_fail"]
     return out
 
 # ─── PAGE ─────────────────────────────────────────────────────────────────────
@@ -184,20 +187,27 @@ st.set_page_config(page_title="CPM Regression Analysis", page_icon="📊", layou
 
 with st.sidebar:
     st.header("⚙️ Settings")
-    uploaded = st.file_uploader("Upload normalised_outputs.xlsx", type=["xlsx"])
-    fp = uploaded
-    if fp is None:
-        for f in ["normalised_outputs.xlsx", "Dummy_Datasets.xlsx", "Core_Datasets.xlsx"]:
-            if os.path.exists(f): fp = f; break
-    st.markdown("---")
     no_outliers = not st.checkbox("Use outlier-removed versions", value=False,
         help="Default OFF — keeps all 18 wards. Turning this on uses cleaner data but may drop some wards.")
     st.markdown("---")
     st.caption("Built by Sian Reilly · Data & Intelligence · WCC")
 
+# Load data from repo (file sits alongside the script)
+import pathlib
+_script_dir = pathlib.Path(__file__).parent
+fp = None
+for f in ["normalised_outputs.xlsx", "Dummy_Datasets.xlsx", "Core_Datasets.xlsx"]:
+    candidate = _script_dir / f
+    if candidate.exists():
+        fp = str(candidate)
+        break
+    elif os.path.exists(f):
+        fp = f
+        break
+
 if fp is None:
     st.title("Common Progress Measures — Regression Analysis")
-    st.warning("Upload your Excel file using the sidebar to get started.")
+    st.error("normalised_outputs.xlsx not found. Make sure it's in the same folder as the app.")
     st.stop()
 
 try:
@@ -220,9 +230,14 @@ with st.sidebar:
     for lb in yrs:
         w = wides[lb]
         le_found = [c for c in w.columns if "life expectancy" in c.lower()]
-        n_results = len(results.get(lb, {}))
+        n_results = len([k for k in results.get(lb, {}) if not k.startswith("_fail")])
         st.caption(f"{lb}: {len(w)} wards, {len(w.columns)} cols, LE cols: {le_found}, models: {n_results}")
-    if not any(results.values()):
+        # Show failure reasons
+        for k, v in results.get(lb, {}).items():
+            if k.startswith("_fail_"):
+                target_name = k.replace("_fail_", "")
+                st.caption(f"  ⚠️ {target_name}: {v}")
+    if not any(k for res in results.values() for k in res if not k.startswith("_fail")):
         all_metrics = []
         for lb, df in yd.items():
             all_metrics.extend(df["Metric"].unique().tolist())
