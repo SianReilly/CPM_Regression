@@ -190,6 +190,7 @@ with st.sidebar:
     no_outliers = not st.checkbox("Use outlier-removed versions", value=False,
         help="Default OFF - keeps all 18 wards. Turning this on uses cleaner data but may drop some wards.")
     st.markdown("---")
+    st.caption("Built by Sian Reilly · Data & Intelligence · WCC")
 
 # Load data from repo (file sits alongside the script)
 import pathlib
@@ -248,7 +249,7 @@ with st.sidebar:
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 st.title("Common Progress Measures - Regression Analysis")
-st.markdown("*Built by Strategy & Intelligence, Westminster City Council*")
+st.markdown("*Built by Sian Reilly, Data & Intelligence Analyst, Strategy & Intelligence, Westminster City Council*")
 st.caption("This dashboard tests how well our CPM indicators explain life expectancy across Westminster's 18 wards, "
            "identifies which indicators matter most, and flags wards where outcomes are unexpectedly good or bad.")
 
@@ -700,8 +701,9 @@ with tabs[4]:
                 if yr in act.columns:
                     fig5.add_trace(go.Bar(y=act.index, x=act[yr], name=yr, orientation="h",
                         marker_color=BERRY if yr==y1 else DUSTY))
-            fig5.update_layout(title=f"Indicator coefficients: {y1} vs {y2} ({TARGET_DISPLAY[yoy_k]})",
-                barmode="group", xaxis_title="Coefficient", height=max(400, len(act)*30+100))
+            fig5.update_layout(title=dict(text=f"Indicator coefficients: {y1} vs {y2} ({TARGET_DISPLAY[yoy_k]})", y=0.98, yanchor="top"),
+                barmode="group", xaxis_title="Coefficient", height=max(400, len(act)*30+150),
+                margin=dict(t=160))
             chart(fig5, f"yoy_coefs_{yoy_k}")
 
             both = pv[(pv.abs()>0).all(axis=1)].index.tolist()
