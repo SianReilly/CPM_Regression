@@ -592,7 +592,7 @@ with tabs[2]:
         fig_c = px.bar(cdf, x="Coefficient", y="Indicator", color="Target", orientation="h",
             barmode="group", color_discrete_sequence=[BERRY, DUSTY, ACCENT])
         fig_c.update_layout(title="How each indicator relates to male, female, and overall LE",
-            height=max(400, len(cdf["Indicator"].unique())*30+100))
+            height=max(400, len(cdf["Indicator"].unique())*30+100), legend_title_text="")
         chart(fig_c, "cross_target")
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -795,8 +795,7 @@ with tabs[5]:
                     colorbar=dict(title="IMD")),
                 hovertemplate="<b>%{y}</b><br>LE Change: %{x:.3f}<br>IMD: %{marker.color:.1f}<extra></extra>"))
             fig_chg.update_layout(title=f"LE change ({y1} → {y2}), sorted by deprivation (most deprived at top)",
-                xaxis_title="Change in normalised LE score", height=max(450, len(lchg)*30+80),
-                yaxis=dict(autorange="reversed"))
+                xaxis_title="Change in normalised LE score", height=max(450, len(lchg)*30+80))
             chart(fig_chg, f"le_chg_imd_{chg_k}",
                 "Darker red bars = more deprived wards. If deprived wards are declining while affluent ones improve, "
                 "the inequality gap is widening.")
@@ -828,7 +827,7 @@ with tabs[5]:
     if ws:
         fig_d = px.bar(ddf[ddf["Ward"].isin(ws)], x="Score", y="Domain", color="Ward", orientation="h",
             barmode="group", color_discrete_sequence=px.colors.qualitative.Set2)
-        fig_d.update_layout(title="IMD domain profiles", xaxis_title="Score (higher = more deprived)", height=420)
+        fig_d.update_layout(title="IMD domain profiles", xaxis_title="Score (higher = more deprived)", height=420, legend_title_text="")
         chart(fig_d, "imd_doms")
 
     st.subheader("Decile overview")
